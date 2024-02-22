@@ -15,7 +15,10 @@ class CategoryController extends Controller
      */
     public function index()
     {
-        return view('category.index');
+        // return ke arah index.blade.php
+        $category = Category::all();
+
+        return view('category.index', compact('category'));
     }
 
     /**
@@ -40,15 +43,19 @@ class CategoryController extends Controller
             'name' => 'required'
         ]);
 
-        // simpan data ke dalam database
-        Category::create([
-            'name' => $request->name,
-            'slug' => Str::slug($request->name)
-        ]);
-
-        // jika sudah maka kembalikan ke halaman category.index
-
-        return redirect()->route('category.index');
+        // kondisi jika data berhasil disimpan
+        if(
+            Category::create([
+                'name' => $request->name,
+                'slug' => Str::slug($request->name)
+            ])
+        ){
+            return redirect()->route('category.index')
+                ->with(['success' => 'Data Berhasil Disimpan']);
+        } else {
+            return redirect()->route('category.create')
+                ->with(['error'], 'Data Gagal Disimpan');
+        }
     }
 
     /**
@@ -59,7 +66,9 @@ class CategoryController extends Controller
      */
     public function show($id)
     {
-        //
+        $category = Category::findOrFail($id);
+
+        return view('category.show', compact('category'));
     }
 
     /**
@@ -70,7 +79,9 @@ class CategoryController extends Controller
      */
     public function edit($id)
     {
-        //
+        $category = Category::findOrFail($id);
+
+        return view('category.edit', compact('category'));
     }
 
     /**
@@ -82,7 +93,22 @@ class CategoryController extends Controller
      */
     public function update(Request $request, $id)
     {
-        //
+        //validate
+        $this->validate($request,[
+            'name' => 'required'
+        ]);
+
+        // get data by id
+        $category = Category::findOrFail($id);
+
+        // update data
+        $category->update([
+            'name' => $request->name,
+            'slug' => Str::slug($request->name)
+        ]);
+
+        return redirect()->route('category.index')
+            ->with(['success' => 'Data berhasil di update']);
     }
 
     /**
@@ -93,6 +119,9 @@ class CategoryController extends Controller
      */
     public function destroy($id)
     {
-        //
+        $category = Category::findOrFail($id);
+        $category->delete();
+
+        return redirect()->route('category.index')->with(['success' => 'Data berhasil di hapus']);
     }
 }
